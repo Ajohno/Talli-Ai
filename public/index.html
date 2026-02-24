@@ -1,0 +1,75 @@
+<!-- public/index.html -->
+<!-- This file runs in the BROWSER. Do NOT put your API key in here. -->
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Set UTF-8 so text behaves nicely. -->
+    <meta charset="UTF-8" />
+
+    <!-- Make it responsive on phones. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- A basic page title. -->
+    <title>OpenAI Web Demo</title>
+
+    <!-- Some minimal styling so it doesn't look like a 1997 error page. -->
+    <style>
+      body {
+        font-family: system-ui, Arial, sans-serif;
+        max-width: 720px;
+        margin: 40px auto;
+        padding: 0 16px;
+      }
+      textarea {
+        width: 100%;
+        height: 120px;
+        padding: 12px;
+        font-size: 16px;
+      }
+      button {
+        padding: 10px 14px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+      .box {
+        margin-top: 16px;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        white-space: pre-wrap;
+      }
+      .muted {
+        color: #666;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Page heading. -->
+    <h1>OpenAI API: Tiny Website Demo</h1>
+
+    <!-- Explain what's happening in human words. -->
+    <p class="muted">
+      Your message goes to <code>/api/ask</code> on your server, and the server
+      calls OpenAI. This keeps the API key off the client.
+    </p>
+
+    <!-- User input area. -->
+    <textarea
+      id="prompt"
+      placeholder="Type something like: Explain black holes like I'm 10..."
+    ></textarea>
+
+    <!-- Button to send the prompt. -->
+    <button id="sendBtn">Send to OpenAI</button>
+
+    <!-- Where we display status / results. -->
+    <div id="output" class="box">Output will appear here…</div>
+
+    <!-- Load browser JavaScript. -->
+    <script src="app.js"></script>
+  </body>
+</html>
