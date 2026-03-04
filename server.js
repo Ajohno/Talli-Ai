@@ -1,72 +1,170 @@
 // server.js
-// This file runs on your SERVER (Node.js), NOT in the browser.
-// That’s important because the API key must stay secret on the server.
+// This runs on the SERVER (Node). Keep GROQ_API_KEY here, never in browser JS.
 
-// Load environment variables from .env into process.env (local dev convenience).
-import "dotenv/config";
-
-// Import Express, a tiny web server framework.
+import "dotenv/config"; // Loads .env into process.env
 import express from "express";
+import Groq from "groq-sdk"; // Official Groq JS SDK
 
-// Import the official OpenAI SDK.
-import OpenAI from "openai";
-
-// Create an Express app instance.
 const app = express();
+const port = process.env.PORT || 3000;
 
-// Choose a port for your server.
-const PORT = process.env.PORT || 3000;
-
-// Tell Express to parse incoming JSON bodies (so we can read req.body).
+// Parse JSON bodies from the browser
 app.use(express.json());
 
-// Serve static files (HTML/JS) from the "public" folder.
+// Serve your web page files
 app.use(express.static("public"));
 
-// Create an OpenAI client.
-// The SDK reads OPENAI_API_KEY from process.env automatically,
-// but we pass it explicitly to be extra clear for learning.
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Create Groq client (reads GROQ_API_KEY from env)
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// A simple API endpoint your website will call.
-// The browser will POST user text here, and THIS server will call OpenAI.
-app.post("/api/ask", async (req, res) => {
+// -------------------------
+// 1) Define your tool schemas (what the model "sees")
+// -------------------------
+const tools = [
+  {
+    type: "function",
+    function: {
+      name: "get_time",
+      description: "Get the current time in ISO format.",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "calculate",
+      description: "Evaluate a simple math expression like '25 * 4'.",
+      parameters: {
+        type: "object",
+        properties: {
+          expression: {
+            type: "string",
+            description: "A math expression using + - * / and parentheses.",
+          },
+        },
+        required: ["expression"],
+      },
+    },
+  },
+];
+
+// -------------------------
+// 2) Implement the tools (what YOUR server can actually do)
+// -------------------------
+function getTime() {
+  // Return time in a stable, machine-friendly format
+  return new Date().toISOString();
+}
+
+function calculate({ expression }) {
+  // NOTE: eval is unsafe for real apps. This is for learning only.
+  // In production, use a safe math parser library.
   try {
-    // Grab the user's message from the request body.
+    // Allow only digits, spaces, and basic operators for this demo
+    if (!/^[0-9+\-*/().\s]+$/.test(expression)) {
+      return "Error: Expression contains invalid characters.";
+    }
+    const result = eval(expression);
+    return String(result);
+  } catch (e) {
+    return `Error: ${e.message}`;
+  }
+}
+
+// Map tool name -> implementation
+const toolHandlers = {
+  get_time: () => getTime(),
+  calculate: (args) => calculate(args),
+};
+
+// -------------------------
+// 3) The agent endpoint (this is your "agent loop")
+// -------------------------
+app.post("/api/agent", async (req, res) => {
+  try {
     const userMessage = req.body?.message;
 
-    // Validate input (basic sanity check).
     if (!userMessage || typeof userMessage !== "string") {
-      // Send a 400 "Bad Request" if message is missing/invalid.
-      return res.status(400).json({ error: "Please send a 'message' string." });
+      return res.status(400).json({ error: "Send { message: string }" });
     }
 
-    // Call the OpenAI Responses API (recommended for new projects).
-    // We send the user's input and choose a model.
-    const response = await client.responses.create({
-      model: "gpt-5.2",
-      input: userMessage,
+    // Pick a Llama model hosted on Groq.
+    // Groq’s docs list available models and model IDs. :contentReference[oaicite:6]{index=6}
+    const model = "llama-3.3-70b-versatile";
+
+    // Conversation “memory” for this single request:
+    // (For multi-turn chat, store this per-session.)
+    const messages = [
+      {
+        role: "system",
+        content:
+          "You are a helpful web agent. Use tools when they help. " +
+          "If a tool is used, explain the final result clearly to the user.",
+      },
+      { role: "user", content: userMessage },
+    ];
+
+    // Agent orchestration loop:
+    // - Ask model what to do
+    // - If it requests tool calls, run them
+    // - Feed tool results back
+    // - Repeat until final answer
+    for (let step = 0; step < 5; step++) {
+      // Ask the model for the next action
+      const response = await groq.chat.completions.create({
+        model,
+        messages,
+        tools, // Give the model access to our tool schemas
+      });
+
+      const msg = response.choices[0].message;
+
+      // Add the model message to the conversation
+      messages.push(msg);
+
+      // If no tool calls, we’re done: return the model’s final answer
+      if (!msg.tool_calls || msg.tool_calls.length === 0) {
+        return res.json({ answer: msg.content ?? "" });
+      }
+
+      // Otherwise, run each tool call locally and add tool results
+      for (const toolCall of msg.tool_calls) {
+        const toolName = toolCall.function.name;
+        const toolArgs = JSON.parse(toolCall.function.arguments || "{}");
+
+        // Find the matching local tool
+        const handler = toolHandlers[toolName];
+
+        // If the model calls an unknown tool, handle gracefully
+        const toolResult = handler
+          ? await handler(toolArgs)
+          : `Error: Unknown tool '${toolName}'`;
+
+        // Append tool output in the format the API expects
+        messages.push({
+          role: "tool",
+          tool_call_id: toolCall.id,
+          name: toolName,
+          content: String(toolResult),
+        });
+      }
+    }
+
+    // If we hit max steps, fail safely
+    return res.status(500).json({
+      error: "Agent exceeded step limit (possible loop). Try a simpler request.",
     });
-
-    // The SDK provides a convenient output_text field
-    // containing the model’s text response (when applicable).
-    const answer = response.output_text;
-
-    // Send the answer back to the browser as JSON.
-    return res.json({ answer });
   } catch (err) {
-    // Log the error on the server so you can debug it.
-    console.error("OpenAI API error:", err);
-
-    // Return a generic message to the browser.
-    // (In production, you’d be more careful about what you reveal.)
-    return res.status(500).json({ error: "Something went wrong on the server." });
+    console.error("Agent error:", err);
+    return res.status(500).json({ error: "Server error." });
   }
 });
 
-// Start the server and print a friendly URL.
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+// Start server
+app.listen(port, () => {
+  console.log(`Running: http://localhost:${port}`);
 });

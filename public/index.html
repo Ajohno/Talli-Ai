@@ -1,19 +1,12 @@
 <!-- public/index.html -->
-<!-- This file runs in the BROWSER. Do NOT put your API key in here. -->
+<!-- Browser code: NEVER put GROQ_API_KEY here. -->
 
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- Set UTF-8 so text behaves nicely. -->
     <meta charset="UTF-8" />
-
-    <!-- Make it responsive on phones. -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <!-- A basic page title. -->
-    <title>OpenAI Web Demo</title>
-
-    <!-- Some minimal styling so it doesn't look like a 1997 error page. -->
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Groq Llama Agent Demo</title>
     <style>
       body {
         font-family: system-ui, Arial, sans-serif;
@@ -33,43 +26,27 @@
         cursor: pointer;
         margin-top: 10px;
       }
-      .box {
-        margin-top: 16px;
-        padding: 12px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
+      pre {
         white-space: pre-wrap;
-      }
-      .muted {
-        color: #666;
-        font-size: 14px;
+        border: 1px solid #ddd;
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 16px;
       }
     </style>
   </head>
-
   <body>
-    <!-- Page heading. -->
-    <h1>OpenAI API: Tiny Website Demo</h1>
+    <h1>Groq-hosted Llama “Agent”</h1>
 
-    <!-- Explain what's happening in human words. -->
-    <p class="muted">
-      Your message goes to <code>/api/ask</code> on your server, and the server
-      calls OpenAI. This keeps the API key off the client.
+    <p>
+      Try: <code>What time is it?</code> or <code>What is (25 * 4) + 10?</code>
     </p>
 
-    <!-- User input area. -->
-    <textarea
-      id="prompt"
-      placeholder="Type something like: Explain black holes like I'm 10..."
-    ></textarea>
+    <textarea id="prompt" placeholder="Ask the agent something..."></textarea>
+    <button id="send">Run Agent</button>
 
-    <!-- Button to send the prompt. -->
-    <button id="sendBtn">Send to OpenAI</button>
+    <pre id="out">Output will appear here...</pre>
 
-    <!-- Where we display status / results. -->
-    <div id="output" class="box">Output will appear here…</div>
-
-    <!-- Load browser JavaScript. -->
     <script src="app.js"></script>
   </body>
 </html>
