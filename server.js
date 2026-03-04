@@ -14,8 +14,35 @@ app.use(express.json());
 // Serve your web page files
 app.use(express.static("public"));
 
+// Vercel ignores express.static(), so the homepage needs an explicit route.
+app.get("/", (_req, res) => {
+  res.redirect("/index.html");
+});
+
 // Create Groq client (reads GROQ_API_KEY from env)
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+function normalizeMessages(input) {
+  if (!Array.isArray(input) || input.length === 0) {
+    return null;
+  }
+
+  const messages = input
+    .filter((message) => {
+      return (
+        message &&
+        (message.role === "user" || message.role === "assistant") &&
+        typeof message.content === "string" &&
+        message.content.trim() !== ""
+      );
+    })
+    .map((message) => ({
+      role: message.role,
+      content: message.content.trim(),
+    }));
+
+  return messages.length > 0 ? messages : null;
+}
 
 // -------------------------
 // 1) Define your tool schemas (what the model "sees")
@@ -86,15 +113,19 @@ const toolHandlers = {
 // -------------------------
 app.post("/api/agent", async (req, res) => {
   try {
-    const userMessage = req.body?.message;
-
-    if (!userMessage || typeof userMessage !== "string") {
-      return res.status(400).json({ error: "Send { message: string }" });
-    }
-
     // Pick a Llama model hosted on Groq.
     // Groq’s docs list available models and model IDs. :contentReference[oaicite:6]{index=6}
     const model = "llama-3.3-70b-versatile";
+    const conversation =
+      typeof req.body?.message === "string" && req.body.message.trim() !== ""
+        ? [{ role: "user", content: req.body.message.trim() }]
+        : normalizeMessages(req.body?.messages);
+
+    if (!conversation) {
+      return res.status(400).json({
+        error: "Send { message: string } or { messages: Message[] }",
+      });
+    }
 
     // Conversation “memory” for this single request:
     // (For multi-turn chat, store this per-session.)
@@ -105,7 +136,7 @@ app.post("/api/agent", async (req, res) => {
           "You are a helpful web agent. Use tools when they help. " +
           "If a tool is used, explain the final result clearly to the user.",
       },
-      { role: "user", content: userMessage },
+      ...conversation,
     ];
 
     // Agent orchestration loop:
@@ -168,3 +199,5 @@ app.post("/api/agent", async (req, res) => {
 app.listen(port, () => {
   console.log(`Running: http://localhost:${port}`);
 });
+
+export default app;
