@@ -14,6 +14,11 @@ app.use(express.json());
 // Serve your web page files
 app.use(express.static("public"));
 
+// Vercel ignores express.static(), so the homepage needs an explicit route.
+app.get("/", (_req, res) => {
+  res.redirect("/index.html");
+});
+
 // Create Groq client (reads GROQ_API_KEY from env)
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -168,3 +173,5 @@ app.post("/api/agent", async (req, res) => {
 app.listen(port, () => {
   console.log(`Running: http://localhost:${port}`);
 });
+
+export default app;
