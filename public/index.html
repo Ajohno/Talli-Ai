@@ -6,46 +6,305 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Groq Llama Agent Demo</title>
+    <title>Talli Chat</title>
     <style>
-      body {
-        font-family: system-ui, Arial, sans-serif;
-        max-width: 720px;
-        margin: 40px auto;
-        padding: 0 16px;
+      :root {
+        --bg-top: #f6efe6;
+        --bg-bottom: #d9e4ec;
+        --panel: rgba(255, 252, 247, 0.82);
+        --panel-border: rgba(68, 57, 47, 0.12);
+        --ink: #201b16;
+        --muted: #6f655d;
+        --assistant: #fff7ef;
+        --assistant-border: #e6d5c4;
+        --user: #1d4d63;
+        --user-ink: #f4f8fb;
+        --accent: #b7653c;
+        --shadow: 0 24px 60px rgba(32, 27, 22, 0.16);
       }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 28%),
+          linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        inset: auto;
+        border-radius: 999px;
+        pointer-events: none;
+        filter: blur(8px);
+      }
+
+      body::before {
+        top: 72px;
+        right: 8vw;
+        width: 180px;
+        height: 180px;
+        background: rgba(183, 101, 60, 0.18);
+      }
+
+      body::after {
+        left: 5vw;
+        bottom: 80px;
+        width: 240px;
+        height: 240px;
+        background: rgba(29, 77, 99, 0.14);
+      }
+
+      .app-shell {
+        width: min(960px, calc(100vw - 32px));
+        height: min(860px, calc(100vh - 32px));
+        margin: 16px auto;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+        overflow: hidden;
+      }
+
+      .chat-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 24px 24px 18px;
+        border-bottom: 1px solid rgba(68, 57, 47, 0.08);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0));
+      }
+
+      .title-wrap h1 {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(1.8rem, 3vw, 2.4rem);
+        font-weight: 600;
+        letter-spacing: -0.04em;
+      }
+
+      .title-wrap p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 0.98rem;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(68, 57, 47, 0.08);
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .status-pill::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #57a773;
+        box-shadow: 0 0 0 6px rgba(87, 167, 115, 0.14);
+      }
+
+      .messages {
+        padding: 22px 18px 10px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .message {
+        display: flex;
+      }
+
+      .message[data-role="user"] {
+        justify-content: flex-end;
+      }
+
+      .bubble {
+        max-width: min(78%, 680px);
+        padding: 14px 16px;
+        border-radius: 22px;
+        border: 1px solid var(--assistant-border);
+        background: var(--assistant);
+        box-shadow: 0 12px 22px rgba(87, 72, 59, 0.08);
+      }
+
+      .message[data-role="user"] .bubble {
+        background: var(--user);
+        color: var(--user-ink);
+        border-color: transparent;
+      }
+
+      .bubble.is-pending {
+        opacity: 0.72;
+      }
+
+      .message-role {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      .message[data-role="user"] .message-role {
+        color: rgba(244, 248, 251, 0.72);
+      }
+
+      .message-body {
+        margin: 0;
+        white-space: pre-wrap;
+        line-height: 1.55;
+        font-size: 1rem;
+      }
+
+      .composer-wrap {
+        padding: 16px;
+        border-top: 1px solid rgba(68, 57, 47, 0.08);
+        background: rgba(250, 245, 238, 0.84);
+      }
+
+      .composer {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: end;
+        padding: 12px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(68, 57, 47, 0.1);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      }
+
       textarea {
         width: 100%;
-        height: 120px;
-        padding: 12px;
-        font-size: 16px;
+        min-height: 56px;
+        max-height: 180px;
+        resize: none;
+        border: 0;
+        outline: none;
+        background: transparent;
+        color: var(--ink);
+        font: inherit;
+        line-height: 1.5;
       }
+
+      textarea::placeholder {
+        color: #8a7f76;
+      }
+
       button {
-        padding: 10px 14px;
-        font-size: 16px;
+        border: 0;
+        border-radius: 16px;
+        padding: 14px 18px;
+        background: linear-gradient(135deg, #c56e43, #9d4c31);
+        color: #fff8f3;
+        font: inherit;
+        font-weight: 700;
+        letter-spacing: 0.01em;
         cursor: pointer;
-        margin-top: 10px;
+        transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+        box-shadow: 0 12px 18px rgba(157, 76, 49, 0.28);
       }
-      pre {
-        white-space: pre-wrap;
-        border: 1px solid #ddd;
-        padding: 12px;
-        border-radius: 8px;
-        margin-top: 16px;
+
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+
+      button:disabled {
+        opacity: 0.7;
+        cursor: wait;
+      }
+
+      .composer-footnote {
+        margin: 10px 4px 0;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      @media (max-width: 720px) {
+        .app-shell {
+          width: 100vw;
+          height: 100vh;
+          margin: 0;
+          border-radius: 0;
+        }
+
+        .chat-topbar {
+          padding: 18px 16px 14px;
+          align-items: flex-start;
+          gap: 12px;
+          flex-direction: column;
+        }
+
+        .bubble {
+          max-width: 88%;
+        }
+
+        .composer {
+          grid-template-columns: 1fr;
+        }
+
+        button {
+          width: 100%;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>Groq-hosted Llama “Agent”</h1>
+    <main class="app-shell">
+      <header class="chat-topbar">
+        <div class="title-wrap">
+          <h1>Talli Chat</h1>
+          <p>Continuous back-and-forth with tool-using responses.</p>
+        </div>
+        <div class="status-pill" id="status">Connected</div>
+      </header>
 
-    <p>
-      Try: <code>What time is it?</code> or <code>What is (25 * 4) + 10?</code>
-    </p>
+      <section class="messages" id="messages" aria-live="polite"></section>
 
-    <textarea id="prompt" placeholder="Ask the agent something..."></textarea>
-    <button id="send">Run Agent</button>
+      <div class="composer-wrap">
+        <form class="composer" id="composer">
+          <textarea
+            id="prompt"
+            placeholder="Message Talli..."
+            rows="1"
+          ></textarea>
+          <button id="send" type="submit">Send</button>
+        </form>
+        <p class="composer-footnote">
+          Press Enter to send. Use Shift+Enter for a new line.
+        </p>
+      </div>
+    </main>
 
-    <pre id="out">Output will appear here...</pre>
+    <template id="message-template">
+      <article class="message">
+        <div class="bubble">
+          <span class="message-role"></span>
+          <p class="message-body"></p>
+        </div>
+      </article>
+    </template>
 
     <script src="app.js"></script>
   </body>
