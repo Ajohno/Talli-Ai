@@ -1,0 +1,16 @@
+{
+  "name": "Talli Chat",
+  "short_name": "Talli",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f5f7",
+  "theme_color": "#272948",
+  "icons": [
+    {
+      "src": "/icons/talli-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
