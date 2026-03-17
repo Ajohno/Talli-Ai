@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Talli hummingbird icon">
+  <rect width="512" height="512" rx="96" fill="#f4f5f7"/>
+  <g stroke="#272948" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M246 118c37 28 60 67 62 114-46-8-92-35-116-75 8-18 26-34 54-39z" fill="#97C24E"/>
+    <path d="M158 170c34 8 64 29 85 59-31 11-67 7-97-12-10-17-15-34-12-47z" fill="#A8CD56"/>
+    <path d="M251 213c19-3 53 2 77 17 6 24-6 47-24 60-22 15-52 20-73 7-13-24-8-62 20-84z" fill="#EE9542"/>
+    <path d="M252 214c-32 45-36 113 8 168-22 42-40 86-46 126-36-29-55-73-57-121 2-74 35-142 95-173z" fill="#E28337"/>
+    <path d="M308 229c34-7 69-4 101 8-18 8-34 12-55 12 13 24 3 48-15 65-20 19-45 29-72 27" fill="#ffffff"/>
+    <path d="M252 214c-22 29-36 64-37 102 2 31 11 58 30 79" fill="none"/>
+  </g>
+</svg>
