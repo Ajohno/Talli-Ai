@@ -4,6 +4,10 @@ const sendBtn = document.getElementById("send");
 const messagesEl = document.getElementById("messages");
 const statusEl = document.getElementById("status");
 const templateEl = document.getElementById("message-template");
+const composerStageEl = document.getElementById("composerStage");
+const typingCharacterEl = document.getElementById("typingCharacter");
+
+const MAX_CHARS_FOR_CHARACTER_TRAVEL = 140;
 
 const conversation = [
   {
@@ -20,6 +24,24 @@ function setStatus(text) {
 function autoResize() {
   promptEl.style.height = "auto";
   promptEl.style.height = `${Math.min(promptEl.scrollHeight, 180)}px`;
+}
+
+function updateTypingCharacter() {
+  if (!composerStageEl || !typingCharacterEl) {
+    return;
+  }
+
+  const length = promptEl.value.trim().length;
+  typingCharacterEl.classList.toggle("is-active", length > 0);
+
+  const stageRect = composerStageEl.getBoundingClientRect();
+  const characterWidth = typingCharacterEl.offsetWidth;
+  const minX = 8;
+  const maxX = Math.max(minX, stageRect.width - characterWidth - 8);
+  const progress = Math.min(length / MAX_CHARS_FOR_CHARACTER_TRAVEL, 1);
+  const x = minX + (maxX - minX) * progress;
+
+  typingCharacterEl.style.transform = `translateX(${x}px)`;
 }
 
 function scrollToLatest() {
@@ -74,6 +96,7 @@ async function sendMessage() {
   rerenderConversation();
   promptEl.value = "";
   autoResize();
+  updateTypingCharacter();
   setSendingState(true);
 
   try {
@@ -124,6 +147,8 @@ formEl.addEventListener("submit", async (event) => {
 });
 
 promptEl.addEventListener("input", autoResize);
+promptEl.addEventListener("input", updateTypingCharacter);
+window.addEventListener("resize", updateTypingCharacter);
 promptEl.addEventListener("keydown", async (event) => {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
@@ -133,3 +158,4 @@ promptEl.addEventListener("keydown", async (event) => {
 
 rerenderConversation();
 autoResize();
+updateTypingCharacter();
