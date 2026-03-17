@@ -12,4 +12,4 @@
 2. Add `GROQ_API_KEY` in the Vercel project environment variables.
 3. Deploy.
 
-Vercel serves static assets from `public/` and the agent API from `api/agent.js` via `vercel.json` rewrites (only `/api/*` hits serverless code).
+Vercel serves static assets from `public/` and the agent API from `api/agent.js` (rewrites are limited to `/api/*`).
