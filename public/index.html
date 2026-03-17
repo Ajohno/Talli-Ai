@@ -192,11 +192,10 @@
         position: absolute;
         top: 2px;
         left: 0;
-        width: 48px;
+        width: 56px;
         height: 48px;
         display: grid;
         place-items: center;
-        font-size: 2rem;
         transform: translateX(0);
         transition: transform 120ms linear, opacity 120ms ease;
         pointer-events: none;
@@ -205,6 +204,88 @@
 
       .typing-character.is-active {
         opacity: 1;
+      }
+
+      .typing-character-core {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+      }
+
+      .bird-body {
+        position: relative;
+        z-index: 2;
+        font-size: 2rem;
+        line-height: 1;
+      }
+
+      .wing {
+        position: absolute;
+        top: 14px;
+        font-size: 1rem;
+        line-height: 1;
+        color: rgba(32, 27, 22, 0.42);
+        opacity: 0;
+        transform-origin: center;
+      }
+
+      .wing-left {
+        left: 7px;
+      }
+
+      .wing-right {
+        right: 9px;
+      }
+
+      .typing-character.is-typing .typing-character-core {
+        animation: birdHop 360ms ease-in-out infinite;
+      }
+
+      .typing-character.is-typing .wing {
+        opacity: 1;
+      }
+
+      .typing-character.is-typing .wing-left {
+        animation: wingFlapLeft 180ms ease-in-out infinite;
+      }
+
+      .typing-character.is-typing .wing-right {
+        animation: wingFlapRight 180ms ease-in-out infinite;
+      }
+
+      @keyframes birdHop {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+
+        50% {
+          transform: translateY(-6px);
+        }
+      }
+
+      @keyframes wingFlapLeft {
+        0%,
+        100% {
+          transform: rotate(22deg) scale(0.95);
+        }
+
+        50% {
+          transform: rotate(-22deg) scale(1.12);
+        }
+      }
+
+      @keyframes wingFlapRight {
+        0%,
+        100% {
+          transform: rotate(-22deg) scale(0.95);
+        }
+
+        50% {
+          transform: rotate(22deg) scale(1.12);
+        }
       }
 
       .composer {
@@ -308,7 +389,13 @@
 
       <div class="composer-wrap">
         <div class="composer-stage" id="composerStage">
-          <div class="typing-character" id="typingCharacter" aria-hidden="true">🐦</div>
+          <div class="typing-character" id="typingCharacter" aria-hidden="true">
+            <div class="typing-character-core">
+              <span class="wing wing-left">❧</span>
+              <span class="bird-body">🐦</span>
+              <span class="wing wing-right">❧</span>
+            </div>
+          </div>
           <form class="composer" id="composer">
             <textarea
               id="prompt"

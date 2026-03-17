@@ -8,6 +8,9 @@ const composerStageEl = document.getElementById("composerStage");
 const typingCharacterEl = document.getElementById("typingCharacter");
 
 const MAX_CHARS_FOR_CHARACTER_TRAVEL = 140;
+const TYPING_ANIMATION_IDLE_MS = 240;
+
+let typingAnimationTimeoutId;
 
 const conversation = [
   {
@@ -34,6 +37,10 @@ function updateTypingCharacter() {
   const length = promptEl.value.trim().length;
   typingCharacterEl.classList.toggle("is-active", length > 0);
 
+  if (length === 0) {
+    typingCharacterEl.classList.remove("is-typing");
+  }
+
   const stageRect = composerStageEl.getBoundingClientRect();
   const characterWidth = typingCharacterEl.offsetWidth;
   const minX = 8;
@@ -42,6 +49,19 @@ function updateTypingCharacter() {
   const x = minX + (maxX - minX) * progress;
 
   typingCharacterEl.style.transform = `translateX(${x}px)`;
+}
+
+function animateTypingCharacter() {
+  if (!typingCharacterEl || !promptEl.value.trim()) {
+    return;
+  }
+
+  typingCharacterEl.classList.add("is-typing");
+  clearTimeout(typingAnimationTimeoutId);
+
+  typingAnimationTimeoutId = setTimeout(() => {
+    typingCharacterEl.classList.remove("is-typing");
+  }, TYPING_ANIMATION_IDLE_MS);
 }
 
 function scrollToLatest() {
@@ -96,6 +116,7 @@ async function sendMessage() {
   rerenderConversation();
   promptEl.value = "";
   autoResize();
+  clearTimeout(typingAnimationTimeoutId);
   updateTypingCharacter();
   setSendingState(true);
 
@@ -148,6 +169,7 @@ formEl.addEventListener("submit", async (event) => {
 
 promptEl.addEventListener("input", autoResize);
 promptEl.addEventListener("input", updateTypingCharacter);
+promptEl.addEventListener("input", animateTypingCharacter);
 window.addEventListener("resize", updateTypingCharacter);
 promptEl.addEventListener("keydown", async (event) => {
   if (event.key === "Enter" && !event.shiftKey) {
