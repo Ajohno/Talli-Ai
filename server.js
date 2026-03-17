@@ -4,6 +4,8 @@
 import "dotenv/config"; // Loads .env into process.env
 import express from "express";
 import Groq from "groq-sdk"; // Official Groq JS SDK
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -14,9 +16,11 @@ app.use(express.json());
 // Serve your web page files
 app.use(express.static("public"));
 
-// Vercel ignores express.static(), so the homepage needs an explicit route.
+// Local dev homepage route without redirect loops.
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 app.get("/", (_req, res) => {
-  res.redirect("/index.html");
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // Create Groq client (reads GROQ_API_KEY from env)
