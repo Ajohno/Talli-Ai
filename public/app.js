@@ -6,7 +6,6 @@ const statusEl = document.getElementById("status");
 const templateEl = document.getElementById("message-template");
 const composerStageEl = document.getElementById("composerStage");
 const typingCharacterEl = document.getElementById("typingCharacter");
-const typingPupilEl = document.getElementById("typingPupil");
 
 const MAX_CHARS_FOR_CHARACTER_TRAVEL = 140;
 
@@ -32,7 +31,7 @@ function updateTypingCharacter() {
     return;
   }
 
-  const length = promptEl.value.length;
+  const length = promptEl.value.trim().length;
   typingCharacterEl.classList.toggle("is-active", length > 0);
 
   const stageRect = composerStageEl.getBoundingClientRect();
@@ -43,12 +42,6 @@ function updateTypingCharacter() {
   const x = minX + (maxX - minX) * progress;
 
   typingCharacterEl.style.transform = `translateX(${x}px)`;
-
-  if (typingPupilEl) {
-    const shiftX = -1 + progress * 3;
-    const shiftY = Math.sin(progress * Math.PI) * 0.6;
-    typingPupilEl.style.transform = `translate(${shiftX}px, ${shiftY}px)`;
-  }
 }
 
 function scrollToLatest() {
