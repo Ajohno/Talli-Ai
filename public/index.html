@@ -192,19 +192,15 @@
         position: absolute;
         top: 2px;
         left: 0;
-        width: 72px;
-        height: 72px;
+        width: 48px;
+        height: 48px;
+        display: grid;
+        place-items: center;
+        font-size: 2rem;
         transform: translateX(0);
         transition: transform 120ms linear, opacity 120ms ease;
         pointer-events: none;
         opacity: 0;
-        filter: drop-shadow(0 7px 10px rgba(32, 27, 22, 0.12));
-      }
-
-      .typing-character svg {
-        width: 100%;
-        height: 100%;
-        overflow: visible;
       }
 
       .typing-character.is-active {
@@ -312,66 +308,7 @@
 
       <div class="composer-wrap">
         <div class="composer-stage" id="composerStage">
-          <div class="typing-character" id="typingCharacter" aria-hidden="true">
-            <svg viewBox="0 0 128 128" role="presentation" focusable="false">
-              <path
-                d="M41 56 C27 44, 18 42, 14 44 C15 58, 24 72, 39 80"
-                fill="none"
-                stroke="#34364f"
-                stroke-width="7"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M52 48 C40 30, 31 22, 24 20 C23 39, 35 60, 57 66"
-                fill="#a4c74c"
-                stroke="#34364f"
-                stroke-width="7"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M42 52 C32 42, 25 39, 20 39 C22 52, 30 66, 46 72"
-                fill="#9abc45"
-                stroke="#34364f"
-                stroke-width="7"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M43 102 C29 83, 26 64, 38 49 C49 35, 67 33, 85 41 C71 44, 62 52, 55 66 C49 78, 47 90, 43 102 Z"
-                fill="#ec8d3c"
-                stroke="#34364f"
-                stroke-width="7"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M59 46 C72 38, 89 39, 106 45 C94 44, 84 49, 74 59"
-                fill="none"
-                stroke="#34364f"
-                stroke-width="7"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M53 61 C57 73, 68 78, 81 73"
-                fill="none"
-                stroke="#34364f"
-                stroke-width="7"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M48 95 C37 80, 35 66, 45 54 C54 44, 69 42, 79 46 C67 50, 58 59, 53 72"
-                fill="none"
-                stroke="#f6bf81"
-                stroke-width="6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
+          <div class="typing-character" id="typingCharacter" aria-hidden="true">🐦</div>
           <form class="composer" id="composer">
             <textarea
               id="prompt"
