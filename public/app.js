@@ -9,7 +9,7 @@ const conversation = [
   {
     role: "assistant",
     content:
-      "I'm ready. Ask for a calculation, the current time, or anything else you want to explore.",
+      "Hi! I'm Talli. Let me know if I can be of any assistance. I will help as best I can!",
   },
 ];
 
