@@ -6,7 +6,7 @@ import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { handleAgentRequest } from "./lib/agent.js";
-import { handleAuthRequest } from "./lib/auth.js";
+import { authRateLimitMiddleware, handleAuthRequest } from "./lib/auth.js";
 import { handleChatsRequest } from "./lib/chats.js";
 import rateLimit from "express-rate-limit";
 
@@ -34,7 +34,7 @@ app.all("/api/agent", (req, res) => {
   return handleAgentRequest(req, res);
 });
 
-app.all("/api/auth", (req, res) => {
+app.all("/api/auth", authRateLimitMiddleware, (req, res) => {
   return handleAuthRequest(req, res);
 });
 
