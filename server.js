@@ -3,6 +3,7 @@ import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { handleAgentRequest } from "./lib/agent.js";
+import { handleChatsRequest } from "./lib/chats.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -17,8 +18,12 @@ app.get("/", (_req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-app.post("/api/agent", (req, res) => {
+app.all("/api/agent", (req, res) => {
   return handleAgentRequest(req, res);
+});
+
+app.all("/api/chats", (req, res) => {
+  return handleChatsRequest(req, res);
 });
 
 app.listen(port, () => {
