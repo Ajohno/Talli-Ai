@@ -122,6 +122,52 @@
         line-height: 1.45;
       }
 
+      .auth-card {
+        display: grid;
+        gap: 10px;
+        padding: 14px;
+        border: 1px solid rgba(212, 175, 55, 0.16);
+        border-radius: 18px;
+        background: rgba(15, 22, 15, 0.72);
+      }
+
+      .auth-copy {
+        display: grid;
+        gap: 4px;
+      }
+
+      .auth-label {
+        margin: 0;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      .auth-name {
+        margin: 0;
+        font-size: 0.98rem;
+        font-weight: 600;
+      }
+
+      .auth-meta {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.88rem;
+        line-height: 1.4;
+      }
+
+      .auth-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .auth-secondary {
+        background: rgba(12, 18, 12, 0.82);
+      }
+
       .new-chat-button,
       .action-button {
         border: 1px solid rgba(212, 175, 55, 0.24);
@@ -616,6 +662,17 @@
           <div>
             <h1 class="sidebar-title">Talli</h1>
             <p class="sidebar-copy">Create focused chat threads, archive the ones you want to keep, and clear only the memory you do not want carried forward.</p>
+          </div>
+          <div class="auth-card">
+            <div class="auth-copy">
+              <p class="auth-label">Account</p>
+              <p class="auth-name" id="auth-name">Guest mode</p>
+              <p class="auth-meta" id="auth-meta">Sign in with Google to keep chats and memory attached to your account.</p>
+            </div>
+            <div class="auth-actions">
+              <button id="sign-in" class="action-button" type="button">Sign in with Google</button>
+              <button id="sign-out" class="action-button auth-secondary" type="button" hidden>Sign out</button>
+            </div>
           </div>
           <button id="new-chat" class="new-chat-button" type="button">+ New chat</button>
         </div>
