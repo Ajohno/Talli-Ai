@@ -86,6 +86,17 @@ function createSessionId() {
     return globalThis.crypto.randomUUID();
   }
 
+  // Fallback: use cryptographically secure random bytes to build an ID
+  if (globalThis.crypto?.getRandomValues) {
+    const bytes = new Uint8Array(16);
+    globalThis.crypto.getRandomValues(bytes);
+    const hex = Array.from(bytes)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    return `session-${hex}`;
+  }
+
+  // Last-resort non-crypto fallback if crypto is completely unavailable
   return `session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
