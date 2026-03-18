@@ -34,7 +34,7 @@ app.all("/api/agent", (req, res) => {
   return handleAgentRequest(req, res);
 });
 
-app.all("/api/auth", authRateLimitMiddleware, (req, res) => {
+app.all("/api/auth", authLimiter, authRateLimitMiddleware, (req, res) => {
   return handleAuthRequest(req, res);
 });
 
