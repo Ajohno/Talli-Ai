@@ -1,3 +1,5 @@
+// Frontend app state and UI wiring for chats, auth state, and optimistic
+// message rendering. The browser stores a fallback session id for guest users.
 const formEl = document.getElementById("composer");
 const promptEl = document.getElementById("prompt");
 const sendBtn = document.getElementById("send");
@@ -15,6 +17,10 @@ const chatListEl = document.getElementById("chat-list");
 const archivedListEl = document.getElementById("archived-list");
 const activeChatTitleEl = document.getElementById("active-chat-title");
 const activeChatMetaEl = document.getElementById("active-chat-meta");
+const authNameEl = document.getElementById("auth-name");
+const authMetaEl = document.getElementById("auth-meta");
+const signInBtn = document.getElementById("sign-in");
+const signOutBtn = document.getElementById("sign-out");
 
 const LEGACY_CONVERSATION_KEY = "talli.conversation.v1";
 const SESSION_KEY = "talli.session.v1";
@@ -27,12 +33,16 @@ const DEFAULT_CONVERSATION = [
   },
 ];
 
+// Shared client-side state for the current browser tab.
 const state = {
   sessionId: loadSessionId(),
   activeChatId: loadActiveChatId(),
   chats: [],
   isBusy: false,
   sidebarOpen: false,
+  user: null,
+  googleConfigured: false,
+  missingGoogleAuthEnvVars: [],
 };
 
 let conversationRenderVersion = 0;
@@ -82,6 +92,8 @@ function createSessionId() {
   return `session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+// Guest mode uses a browser-local session id so chats still persist even
+// when the user has not signed in with Google.
 function loadSessionId() {
   try {
     const storedSessionId = localStorage.getItem(SESSION_KEY);
@@ -206,6 +218,94 @@ function markLatestAssistantMessage(chat) {
 
 function setStatus(text) {
   statusEl.textContent = text;
+}
+
+function getAuthErrorMessage() {
+  const authError = new URLSearchParams(window.location.search).get("authError");
+
+  if (authError === "state_mismatch") {
+    return "Google sign-in could not be verified. Please try again.";
+  }
+
+  if (authError === "oauth_failed") {
+    return "Google sign-in failed. Check your OAuth settings and try again.";
+  }
+
+  return "";
+}
+
+function clearAuthErrorFromUrl() {
+  const url = new URL(window.location.href);
+
+  if (!url.searchParams.has("authError")) {
+    return;
+  }
+
+  url.searchParams.delete("authError");
+  window.history.replaceState({}, "", url);
+}
+
+function getAuthMetaCopy() {
+  if (state.user) {
+    return state.user.email
+      ? `Google account: ${state.user.email}`
+      : "Google account connected.";
+  }
+
+  if (state.googleConfigured) {
+    return "Sign in with Google to keep chats and memory attached to your account.";
+  }
+
+  if (state.missingGoogleAuthEnvVars.length > 0) {
+    return `Google sign-in needs: ${state.missingGoogleAuthEnvVars.join(", ")}`;
+  }
+
+  return "Add your Google OAuth config to enable sign-in.";
+}
+
+// Keeps the sidebar account card in sync with the current auth state.
+function renderAuth() {
+  if (state.user) {
+    authNameEl.textContent = state.user.name || state.user.email || "Signed in";
+    authMetaEl.textContent = getAuthMetaCopy();
+    signInBtn.hidden = true;
+    signInBtn.disabled = false;
+    signOutBtn.hidden = false;
+    signOutBtn.disabled = state.isBusy;
+    return;
+  }
+
+  authNameEl.textContent = "Guest mode";
+  authMetaEl.textContent = getAuthMetaCopy();
+  signInBtn.hidden = false;
+  signInBtn.disabled = state.isBusy;
+  signOutBtn.hidden = true;
+  signOutBtn.disabled = true;
+}
+
+async function loadAuthState() {
+  try {
+    const res = await fetch("/api/auth?action=me");
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      state.user = null;
+      state.googleConfigured = false;
+      state.missingGoogleAuthEnvVars = [];
+      return;
+    }
+
+    state.user = data?.user ?? null;
+    state.googleConfigured = Boolean(data?.googleConfigured);
+    state.missingGoogleAuthEnvVars = Array.isArray(data?.missingGoogleAuthEnvVars)
+      ? data.missingGoogleAuthEnvVars
+      : [];
+  } catch (error) {
+    console.error(error);
+    state.user = null;
+    state.googleConfigured = false;
+    state.missingGoogleAuthEnvVars = [];
+  }
 }
 
 function isMobileLayout() {
@@ -400,6 +500,7 @@ function renderChatHeader() {
 }
 
 function updateControls() {
+  renderAuth();
   const activeChat = getActiveChat();
   const isArchived = Boolean(activeChat?.archived);
 
@@ -440,6 +541,11 @@ function selectChat(chatId) {
   setStatus(getActiveChat()?.archived ? "Viewing archived chat." : "Connected");
 }
 
+function getSessionPayload() {
+  return { sessionId: state.sessionId };
+}
+
+// Fetch and normalize the owner's chats, then select a sensible active chat.
 async function loadChats(preferredChatId = state.activeChatId) {
   state.isBusy = true;
   updateControls();
@@ -480,7 +586,7 @@ async function createNewChat(options = {}) {
     const res = await fetch("/api/chats", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId: state.sessionId }),
+      body: JSON.stringify(getSessionPayload()),
     });
     const data = await res.json().catch(() => ({}));
 
@@ -525,7 +631,7 @@ async function mutateActiveChat(action) {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        sessionId: state.sessionId,
+        ...getSessionPayload(),
         chatId: activeChat.chatId,
         action,
       }),
@@ -589,7 +695,7 @@ async function deleteActiveChat() {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        sessionId: state.sessionId,
+        ...getSessionPayload(),
         chatId: activeChat.chatId,
       }),
     });
@@ -623,6 +729,8 @@ async function deleteActiveChat() {
   }
 }
 
+// Sends the user's message, renders an optimistic pending reply, and then
+// replaces it with the persisted assistant response returned by the backend.
 async function sendMessage() {
   const activeChat = getActiveChat();
   const message = promptEl.value.trim();
@@ -664,7 +772,7 @@ async function sendMessage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        sessionId: state.sessionId,
+        ...getSessionPayload(),
         chatId: activeChat.chatId,
         message,
       }),
@@ -751,12 +859,73 @@ promptEl.addEventListener("keydown", async (event) => {
   }
 });
 
+signInBtn.addEventListener("click", async () => {
+  if (!state.googleConfigured) {
+    await loadAuthState();
+    renderAuth();
+    setStatus(
+      state.missingGoogleAuthEnvVars.length > 0
+        ? `Google sign-in is not ready. Add: ${state.missingGoogleAuthEnvVars.join(", ")}`
+        : "Google sign-in is not ready yet. Check your OAuth environment settings."
+    );
+    return;
+  }
+
+  window.location.href = "/api/auth?action=google-start";
+});
+
+signOutBtn.addEventListener("click", async () => {
+  state.isBusy = true;
+  updateControls();
+  setStatus("Signing out...");
+
+  try {
+    const res = await fetch("/api/auth?action=logout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!res.ok) {
+      setStatus("Unable to sign out.");
+      return;
+    }
+
+    state.user = null;
+    await loadAuthState();
+    await loadChats();
+    setStatus("Signed out.");
+  } catch (error) {
+    console.error(error);
+    setStatus("Unable to sign out.");
+  } finally {
+    state.isBusy = false;
+    updateControls();
+  }
+});
+
 window.addEventListener("resize", () => {
   if (!isMobileLayout()) {
     closeSidebar();
   }
 });
 
-autoResize();
-renderApp();
-loadChats();
+async function initApp() {
+  autoResize();
+  renderApp();
+  await loadAuthState();
+  renderAuth();
+
+  const authErrorMessage = getAuthErrorMessage();
+
+  if (authErrorMessage) {
+    clearAuthErrorFromUrl();
+  }
+
+  await loadChats();
+
+  if (authErrorMessage) {
+    setStatus(authErrorMessage);
+  }
+}
+
+initApp();
