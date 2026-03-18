@@ -1,3 +1,5 @@
+// Frontend app state and UI wiring for chats, auth state, and optimistic
+// message rendering. The browser stores a fallback session id for guest users.
 const formEl = document.getElementById("composer");
 const promptEl = document.getElementById("prompt");
 const sendBtn = document.getElementById("send");
@@ -31,6 +33,7 @@ const DEFAULT_CONVERSATION = [
   },
 ];
 
+// Shared client-side state for the current browser tab.
 const state = {
   sessionId: loadSessionId(),
   activeChatId: loadActiveChatId(),
@@ -100,6 +103,8 @@ function createSessionId() {
   return `session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+// Guest mode uses a browser-local session id so chats still persist even
+// when the user has not signed in with Google.
 function loadSessionId() {
   try {
     const storedSessionId = localStorage.getItem(SESSION_KEY);
@@ -237,6 +242,10 @@ function getAuthErrorMessage() {
     return "Google sign-in failed. Check your OAuth settings and try again.";
   }
 
+  if (authError === "rate_limited") {
+    return "Too many authentication attempts. Please wait a moment and try again.";
+  }
+
   return "";
 }
 
@@ -269,6 +278,7 @@ function getAuthMetaCopy() {
   return "Add your Google OAuth config to enable sign-in.";
 }
 
+// Keeps the sidebar account card in sync with the current auth state.
 function renderAuth() {
   if (state.user) {
     authNameEl.textContent = state.user.name || state.user.email || "Signed in";
@@ -550,6 +560,7 @@ function getSessionPayload() {
   return { sessionId: state.sessionId };
 }
 
+// Fetch and normalize the owner's chats, then select a sensible active chat.
 async function loadChats(preferredChatId = state.activeChatId) {
   state.isBusy = true;
   updateControls();
@@ -733,6 +744,8 @@ async function deleteActiveChat() {
   }
 }
 
+// Sends the user's message, renders an optimistic pending reply, and then
+// replaces it with the persisted assistant response returned by the backend.
 async function sendMessage() {
   const activeChat = getActiveChat();
   const message = promptEl.value.trim();
