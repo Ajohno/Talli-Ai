@@ -8,11 +8,17 @@ import { fileURLToPath } from "node:url";
 import { handleAgentRequest } from "./lib/agent.js";
 import { handleAuthRequest } from "./lib/auth.js";
 import { handleChatsRequest } from "./lib/chats.js";
+import rateLimit from "express-rate-limit";
 
 // The local server serves the static frontend and forwards API traffic to
 // the same request handlers used by the deployed API routes.
 const app = express();
 const port = process.env.PORT || 3000;
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+});
 
 app.use(express.json());
 app.use(express.static("public"));
