@@ -56,7 +56,7 @@ Examples of the kinds of things the system tries to remember:
 When a new message is sent, the backend retrieves relevant memories and includes them in the model prompt.
 
 ### 5. Google OAuth sign-in
-The app includes an optional Google sign-in flow.
+The app includes an optional Google sign-in flow with basic in-memory rate limiting on auth status checks, sign-in starts, callbacks, and logout requests.
 
 When Google sign-in is configured and a user authenticates successfully:
 

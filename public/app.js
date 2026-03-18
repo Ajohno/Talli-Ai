@@ -242,6 +242,10 @@ function getAuthErrorMessage() {
     return "Google sign-in failed. Check your OAuth settings and try again.";
   }
 
+  if (authError === "rate_limited") {
+    return "Too many authentication attempts. Please wait a moment and try again.";
+  }
+
   return "";
 }
 
