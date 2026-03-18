@@ -122,6 +122,65 @@
         line-height: 1.45;
       }
 
+      .auth-card {
+        display: grid;
+        gap: 10px;
+        padding: 14px;
+        border: 1px solid rgba(212, 175, 55, 0.16);
+        border-radius: 18px;
+        background: rgba(15, 22, 15, 0.72);
+      }
+
+      .auth-copy {
+        display: grid;
+        gap: 4px;
+      }
+
+      .auth-label {
+        margin: 0;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      .auth-name {
+        margin: 0;
+        font-size: 0.98rem;
+        font-weight: 600;
+      }
+
+      .auth-meta {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.88rem;
+        line-height: 1.4;
+      }
+
+      .auth-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .auth-secondary {
+        background: rgba(12, 18, 12, 0.82);
+      }
+
+      .auth-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .auth-button svg {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+      }
+
       .new-chat-button,
       .action-button {
         border: 1px solid rgba(212, 175, 55, 0.24);
@@ -616,6 +675,25 @@
           <div>
             <h1 class="sidebar-title">Talli</h1>
             <p class="sidebar-copy">Create focused chat threads, archive the ones you want to keep, and clear only the memory you do not want carried forward.</p>
+          </div>
+          <div class="auth-card">
+            <div class="auth-copy">
+              <p class="auth-label">Account</p>
+              <p class="auth-name" id="auth-name">Guest mode</p>
+              <p class="auth-meta" id="auth-meta">Sign in with Google to keep chats and memory attached to your account.</p>
+            </div>
+            <div class="auth-actions">
+              <button id="sign-in" class="action-button auth-button" type="button">
+                <svg viewBox="0 0 18 18" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                  <path fill="#EA4335" d="M9 7.36364V10.8H13.7773C13.5682 11.9045 12.9409 12.8409 12 13.4682L14.8818 15.7045C16.5591 14.1591 17.5273 11.8864 17.5273 9.18182C17.5273 8.55455 17.4727 7.95455 17.3727 7.36364H9Z"/>
+                  <path fill="#34A853" d="M3.67273 10.7137L3.02216 11.2118L0.718522 13.0064C2.17761 15.9023 5.17295 17.9091 9 17.9091C11.4545 17.9091 13.5091 17.1 14.8818 15.7046L12 13.4682C11.1909 14.0137 10.1591 14.3455 9 14.3455C6.63636 14.3455 4.62727 12.75 3.90909 10.6046L3.67273 10.7137Z"/>
+                  <path fill="#4A90E2" d="M0.71814 4.99359C0.113636 6.1845 -0.000000238419 7.37995 -0.000000238419 9.00041C-0.000000238419 10.6209 0.113636 11.8163 0.71814 13.0072C0.71814 13.0118 3.90905 10.6045 3.90905 10.6045C3.72723 10.0591 3.62268 9.47086 3.62268 9.00041C3.62268 8.52995 3.72723 7.94177 3.90905 7.39632L0.71814 4.99359Z"/>
+                  <path fill="#FBBC05" d="M9 3.65455C10.2636 3.65455 11.3955 4.09091 12.2864 4.94091L14.9455 2.28182C13.5045 0.940909 11.4545 0.0909091 9 0.0909091C5.17273 0.0909091 2.17727 2.09773 0.718182 4.99364L3.90909 7.39636C4.62727 5.25091 6.63636 3.65455 9 3.65455Z"/>
+                </svg>
+                <span>Sign in with Google</span>
+              </button>
+              <button id="sign-out" class="action-button auth-secondary" type="button" hidden>Sign out</button>
+            </div>
           </div>
           <button id="new-chat" class="new-chat-button" type="button">+ New chat</button>
         </div>
