@@ -1,3 +1,26 @@
+/*
+ * PHASE 1 LEARNING GUIDE — BROWSER STATE AND API WIRING
+ *
+ * This file is the old UI's controller. It is especially useful for Phase 1B
+ * because it shows which backend contracts the new UI must preserve.
+ *
+ * The browser keeps only lightweight local state:
+ *   - guest session id
+ *   - currently selected chat id
+ *   - a temporary in-memory copy of chats/auth/UI state
+ *
+ * MongoDB remains the durable source of truth. Chat data is loaded through
+ * /api/chats and messages are sent through /api/agent.
+ *
+ * Key frontend flows to preserve in the redesign:
+ *   load auth -> load chats -> select/create thread -> send message
+ *   archive/restore/clear/delete -> resync returned chat list
+ *
+ * The UI uses optimistic rendering: it immediately shows the user's message
+ * and a temporary "Thinking..." response, then replaces that temporary state
+ * with the persisted chat returned by the backend.
+ */
+
 // Frontend app state and UI wiring for chats, auth state, and optimistic
 // message rendering. The browser stores a fallback session id for guest users.
 const formEl = document.getElementById("composer");
@@ -34,6 +57,8 @@ const DEFAULT_CONVERSATION = [
 ];
 
 // Shared client-side state for the current browser tab.
+// This state object is a client-side view of server data, not the database.
+// After mutations, API responses are normalized back into this object.
 const state = {
   sessionId: loadSessionId(),
   activeChatId: loadActiveChatId(),
@@ -486,6 +511,9 @@ function renderChatList(container, chats, emptyText) {
   }
 }
 
+// The old UI renders active and archived chats at the same time. Phase 1B can
+// change that presentation (nested Conversation list + Archive workspace) while
+// keeping the same chat.archived data and /api/chats operations.
 function renderChatLists() {
   renderChatList(
     chatListEl,
@@ -589,6 +617,8 @@ async function loadChats(preferredChatId = state.activeChatId) {
   }
 }
 
+// A new chat is created on the backend first. Phase 1B can show the new
+// pre-chat home for this returned empty/new thread without changing this API.
 async function createNewChat(options = {}) {
   state.isBusy = true;
   updateControls();
@@ -746,6 +776,9 @@ async function deleteActiveChat() {
 
 // Sends the user's message, renders an optimistic pending reply, and then
 // replaces it with the persisted assistant response returned by the backend.
+// Message flow to preserve in the new UI:
+// 1) optimistic local render, 2) POST one message + owner/chat identifiers,
+// 3) backend runs AI/persistence, 4) replace local thread with returned chat.
 async function sendMessage() {
   const activeChat = getActiveChat();
   const message = promptEl.value.trim();
@@ -924,6 +957,9 @@ window.addEventListener("resize", () => {
   }
 });
 
+// Startup order matters: authentication is checked before chats are loaded.
+// Once signed in, the server resolves the Google owner from the cookie and uses
+// that account's chats even though the guest session id is still sent as fallback.
 async function initApp() {
   autoResize();
   renderApp();
