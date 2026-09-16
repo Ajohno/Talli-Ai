@@ -15,7 +15,6 @@ import "dotenv/config";
  * Phase 1B takeaway: the frontend can be replaced without rewriting the
  * Phase 1 backend as long as the new UI keeps the existing API contracts.
  */
-import "dotenv/config";
 
 // Local development entrypoint. Vercel uses the files in /api directly,
 // but the Express server lets the project run as a single Node app locally.
