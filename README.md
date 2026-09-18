@@ -108,9 +108,21 @@ The app serves static assets from `public/` and exposes API handlers through `/a
 Create `.env` from `.env.example` and set the variables you need.
 
 ### Required for core app behavior
-- `GROQ_API_KEY`
+- `AI_GATEWAY_API_KEY`
 - `MONGODB_URI`
 - `MONGODB_DB_NAME` (optional; defaults to `talli` if omitted in code)
+
+### AI Gateway
+
+Talli routes backend AI requests through Vercel AI Gateway.
+
+- `AI_GATEWAY_API_KEY`
+  - Authenticates server-side requests to Vercel AI Gateway.
+  - Must never be exposed to browser code.
+- The backend uses the OpenAI-compatible Gateway endpoint at `https://ai-gateway.vercel.sh/v1`.
+- Model selection remains controlled by `TALLI_CHAT_MODEL` and `TALLI_BACKGROUND_MODEL`.
+
+Provider and Gateway credentials stay on the server. The frontend communicates only with Talli's `/api/*` routes.
 
 ### AI model configuration
 
@@ -138,7 +150,7 @@ Both model selections can be changed through environment variables without modif
 ## Local development
 
 1. Create `.env` from `.env.example`.
-2. Set `GROQ_API_KEY`, `MONGODB_URI`, and `AUTH_COOKIE_SECRET`.
+2. Set `AI_GATEWAY_API_KEY`, `MONGODB_URI`, and `AUTH_COOKIE_SECRET`.
 3. Optionally set `TALLI_CHAT_MODEL` and `TALLI_BACKGROUND_MODEL` to override the default AI models.
 4. To enable Google sign-in, also set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
 5. In the Google Cloud Console, add an authorized redirect URI pointing to `/api/auth?action=google-callback` on your app origin (for local dev that is typically `http://localhost:3000/api/auth?action=google-callback`).
@@ -147,7 +159,7 @@ Both model selections can be changed through environment variables without modif
 ## Vercel deployment
 
 1. Import the repo into Vercel.
-2. Add `GROQ_API_KEY`, `MONGODB_URI`, `AUTH_COOKIE_SECRET`, `TALLI_CHAT_MODEL`, and `TALLI_BACKGROUND_MODEL` in the Vercel project environment variables.
+2. Add `AI_GATEWAY_API_KEY`, `MONGODB_URI`, `AUTH_COOKIE_SECRET`, `TALLI_CHAT_MODEL`, and `TALLI_BACKGROUND_MODEL` in the Vercel project environment variables.
 3. If you want Google sign-in, also add `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and optionally `GOOGLE_REDIRECT_URI` if you need to force a specific callback URL.
 4. In Google Cloud Console, add your deployed callback URL `/api/auth?action=google-callback` to the app's authorized redirect URIs.
 5. Deploy.
