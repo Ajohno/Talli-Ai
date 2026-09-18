@@ -112,6 +112,19 @@ Create `.env` from `.env.example` and set the variables you need.
 - `MONGODB_URI`
 - `MONGODB_DB_NAME` (optional; defaults to `talli` if omitted in code)
 
+### AI model configuration
+
+Talli separates user-facing AI work from background AI work:
+
+- `TALLI_CHAT_MODEL`
+  - Used for normal conversation and tool calling.
+  - Defaults to `openai/gpt-oss-120b`.
+- `TALLI_BACKGROUND_MODEL`
+  - Used for thread summarization and cross-chat memory extraction.
+  - Defaults to `openai/gpt-oss-20b`.
+
+Both model selections can be changed through environment variables without modifying application code.
+
 ### Required for Google sign-in
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
@@ -126,14 +139,15 @@ Create `.env` from `.env.example` and set the variables you need.
 
 1. Create `.env` from `.env.example`.
 2. Set `GROQ_API_KEY`, `MONGODB_URI`, and `AUTH_COOKIE_SECRET`.
-3. To enable Google sign-in, also set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
-4. In the Google Cloud Console, add an authorized redirect URI pointing to `/api/auth?action=google-callback` on your app origin (for local dev that is typically `http://localhost:3000/api/auth?action=google-callback`).
-5. Run `npm run dev`.
+3. Optionally set `TALLI_CHAT_MODEL` and `TALLI_BACKGROUND_MODEL` to override the default AI models.
+4. To enable Google sign-in, also set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+5. In the Google Cloud Console, add an authorized redirect URI pointing to `/api/auth?action=google-callback` on your app origin (for local dev that is typically `http://localhost:3000/api/auth?action=google-callback`).
+6. Run `npm run dev`.
 
 ## Vercel deployment
 
 1. Import the repo into Vercel.
-2. Add `GROQ_API_KEY`, `MONGODB_URI`, and `AUTH_COOKIE_SECRET` in the Vercel project environment variables.
+2. Add `GROQ_API_KEY`, `MONGODB_URI`, `AUTH_COOKIE_SECRET`, `TALLI_CHAT_MODEL`, and `TALLI_BACKGROUND_MODEL` in the Vercel project environment variables.
 3. If you want Google sign-in, also add `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and optionally `GOOGLE_REDIRECT_URI` if you need to force a specific callback URL.
 4. In Google Cloud Console, add your deployed callback URL `/api/auth?action=google-callback` to the app's authorized redirect URIs.
 5. Deploy.
@@ -146,3 +160,5 @@ A few important things are not fully built out yet:
 - a UI for inspecting / editing long-term memories
 - a formal automated test suite
 - stronger production observability around auth, summaries, and memory quality
+- user-local timezone handling for the current-time tool (tracked in [#35](https://github.com/Ajohno/Talli-Ai/issues/35); planned for Phase 2 — Generic Tool System)
+- safe Markdown rendering for assistant responses so escaped formatting is not shown literally (tracked in [#36](https://github.com/Ajohno/Talli-Ai/issues/36); planned for Phase 1B — New Talli Web UI Migration)
