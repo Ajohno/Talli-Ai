@@ -149,6 +149,8 @@ Both model selections can be changed through environment variables without modif
 
 ## Local development
 
+Use Node.js 24.x locally to match the runtime configured for Vercel deployments.
+
 1. Create `.env` from `.env.example`.
 2. Set `AI_GATEWAY_API_KEY`, `MONGODB_URI`, and `AUTH_COOKIE_SECRET`.
 3. Optionally set `TALLI_CHAT_MODEL` and `TALLI_BACKGROUND_MODEL` to override the default AI models.
