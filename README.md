@@ -120,22 +120,35 @@ Talli routes backend AI requests through Vercel AI Gateway.
   - Authenticates server-side requests to Vercel AI Gateway.
   - Must never be exposed to browser code.
 - The backend uses the OpenAI-compatible Gateway endpoint at `https://ai-gateway.vercel.sh/v1`.
-- Model selection remains controlled by `TALLI_CHAT_MODEL` and `TALLI_BACKGROUND_MODEL`.
+- Primary and fallback model routes remain controlled by `TALLI_CHAT_MODEL`, `TALLI_CHAT_FALLBACK_MODEL`, `TALLI_BACKGROUND_MODEL`, and `TALLI_BACKGROUND_FALLBACK_MODEL`.
 
 Provider and Gateway credentials stay on the server. The frontend communicates only with Talli's `/api/*` routes.
 
 ### AI model configuration
 
-Talli separates user-facing AI work from background AI work:
+Talli separates user-facing AI work from background AI work and uses an explicit, bounded fallback order through Vercel AI Gateway.
 
 - `TALLI_CHAT_MODEL`
-  - Used for normal conversation and tool calling.
+  - Used as the primary model for normal conversation and tool calling.
   - Defaults to `openai/gpt-oss-120b`.
-- `TALLI_BACKGROUND_MODEL`
-  - Used for thread summarization and cross-chat memory extraction.
+- `TALLI_CHAT_FALLBACK_MODEL`
+  - Approved fallback for conversation and tool calling if the primary chat model fails.
   - Defaults to `openai/gpt-oss-20b`.
+- `TALLI_BACKGROUND_MODEL`
+  - Used as the primary model for thread summarization and cross-chat memory extraction.
+  - Defaults to `openai/gpt-oss-20b`.
+- `TALLI_BACKGROUND_FALLBACK_MODEL`
+  - Approved fallback for summarization and memory extraction if the primary background model fails.
+  - Defaults to `openai/gpt-oss-120b`.
 
-Both model selections can be changed through environment variables without modifying application code.
+Fallback order:
+
+- Chat/tool loop: `openai/gpt-oss-120b` → `openai/gpt-oss-20b`
+- Summary/memory extraction: `openai/gpt-oss-20b` → `openai/gpt-oss-120b`
+
+Only the configured approved fallback is supplied to Vercel AI Gateway. Talli does not automatically select arbitrary models or run an unbounded application-level retry loop.
+
+All model selections can be changed through environment variables without modifying application code.
 
 ### Required for Google sign-in
 - `GOOGLE_CLIENT_ID`
@@ -153,7 +166,7 @@ Use Node.js 24.x locally to match the runtime configured for Vercel deployments.
 
 1. Create `.env` from `.env.example`.
 2. Set `AI_GATEWAY_API_KEY`, `MONGODB_URI`, and `AUTH_COOKIE_SECRET`.
-3. Optionally set `TALLI_CHAT_MODEL` and `TALLI_BACKGROUND_MODEL` to override the default AI models.
+3. Optionally set `TALLI_CHAT_MODEL`, `TALLI_CHAT_FALLBACK_MODEL`, `TALLI_BACKGROUND_MODEL`, and `TALLI_BACKGROUND_FALLBACK_MODEL` to override the default AI model routes.
 4. To enable Google sign-in, also set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
 5. In the Google Cloud Console, add an authorized redirect URI pointing to `/api/auth?action=google-callback` on your app origin (for local dev that is typically `http://localhost:3000/api/auth?action=google-callback`).
 6. Run `npm run dev`.
@@ -161,7 +174,7 @@ Use Node.js 24.x locally to match the runtime configured for Vercel deployments.
 ## Vercel deployment
 
 1. Import the repo into Vercel.
-2. Add `AI_GATEWAY_API_KEY`, `MONGODB_URI`, `AUTH_COOKIE_SECRET`, `TALLI_CHAT_MODEL`, and `TALLI_BACKGROUND_MODEL` in the Vercel project environment variables.
+2. Add `AI_GATEWAY_API_KEY`, `MONGODB_URI`, `AUTH_COOKIE_SECRET`, `TALLI_CHAT_MODEL`, `TALLI_CHAT_FALLBACK_MODEL`, `TALLI_BACKGROUND_MODEL`, and `TALLI_BACKGROUND_FALLBACK_MODEL` in the Vercel project environment variables.
 3. If you want Google sign-in, also add `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and optionally `GOOGLE_REDIRECT_URI` if you need to force a specific callback URL.
 4. In Google Cloud Console, add your deployed callback URL `/api/auth?action=google-callback` to the app's authorized redirect URIs.
 5. Deploy.
